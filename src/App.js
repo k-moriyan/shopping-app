@@ -49,7 +49,7 @@ function App() {
   const formatPrice = (price) => price.toLocaleString();
 
   return (
-    <div className={`min-h-screen p-4 ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'}`}>
+    <div className="min-h-screen p-4 bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
       <header className="flex justify-between items-center mb-4">
         <h1 className="text-xl font-bold">商品入力フォーム</h1>
         <motion.button
