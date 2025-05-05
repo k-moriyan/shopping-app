@@ -12,7 +12,7 @@ function App() {
     商品名: '',
     金額: '',
     店舗名: 'コスモス',
-    記録日: new Date().toISOString().split('T')[0], // 当日を初期値
+    記録日: new Date().toISOString().split('T')[0],
   });
 
   const [errors, setErrors] = useState({});
@@ -40,9 +40,8 @@ function App() {
     const { name, value } = e.target;
 
     if (name === '金額') {
-      // 数字以外を除去、カンマ除去
       const numericValue = value.replace(/[^\d]/g, '');
-      const formatted = Number(numericValue).toLocaleString();
+      const formatted = numericValue ? Number(numericValue).toLocaleString() : '';
       setForm({ ...form, [name]: formatted });
     } else {
       setForm({ ...form, [name]: value });
@@ -92,7 +91,7 @@ function App() {
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={toggleDarkMode}
-          className="text-2xl"
+          className="p-2 rounded-full bg-pink-200 dark:bg-pink-700 shadow hover:bg-pink-300 dark:hover:bg-pink-600"
         >
           {darkMode ? '☀️' : '🌙'}
         </motion.button>
@@ -114,6 +113,8 @@ function App() {
           <input
             type="text"
             name="金額"
+            inputMode="numeric"
+            pattern="[0-9]*"
             placeholder="金額"
             value={form.金額}
             onChange={handleChange}
@@ -147,7 +148,7 @@ function App() {
           whileTap={{ scale: 0.95 }}
           className="w-full p-3 bg-pink-400 text-white rounded-2xl shadow-md hover:bg-pink-500"
         >
-          💖 追加
+          ➕ 追加
         </motion.button>
       </form>
 
