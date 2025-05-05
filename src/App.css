@@ -36,3 +36,34 @@
     transform: rotate(360deg);
   }
 }
+
+.app {
+  background-color: #fff;
+  color: #000;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+.app.dark-mode {
+  background-color: #121212;
+  color: #f5f5f5;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dark-mode-toggle {
+  padding: 0.5rem 1rem;
+  border: none;
+  background-color: #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.app.dark-mode .dark-mode-toggle {
+  background-color: #333;
+  color: #fff;
+}

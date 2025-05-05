@@ -3,6 +3,8 @@ import { database } from './firebase';
 import { ref, push, onValue } from 'firebase/database';
 
 function App() {
+  const [darkMode, setDarkMode] = useState(false);
+  const toggleDarkMode = () => setDarkMode(!darkMode);
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState({
     商品名: '',
@@ -43,8 +45,14 @@ function App() {
   const formatPrice = (price) => price.toLocaleString();
 
   return (
-    <div className="App">
-      <h1>商品入力フォーム</h1>
+    <div className={darkMode ? 'App dark-mode' : 'App'}>
+      <header className="header">
+         <h1>商品入力フォーム</h1>
+         <button onClick={toggleDarkMode} className="dark-mode-toggle">
+    {darkMode ? '☀️ ライトモード' : '🌙 ダークモード'}
+  </button>
+</header>
+
       <form onSubmit={handleSubmit}>
         <input
           type="text"
