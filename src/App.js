@@ -6,13 +6,16 @@ import { ref, push, onValue } from 'firebase/database';
 function App() {
   const [darkMode, setDarkMode] = useState(false);
   const toggleDarkMode = () => setDarkMode(!darkMode);
+
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState({
     商品名: '',
     金額: '',
     店舗名: 'コスモス',
-    記録日: '',
+    記録日: new Date().toISOString().split('T')[0], // 当日を初期値
   });
+
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     const dataRef = ref(database, '/products');
@@ -34,20 +37,52 @@ function App() {
   }, [darkMode]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === '金額') {
+      // 数字以外を除去、カンマ除去
+      const numericValue = value.replace(/[^\d]/g, '');
+      const formatted = Number(numericValue).toLocaleString();
+      setForm({ ...form, [name]: formatted });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!form.商品名.trim()) newErrors.商品名 = '商品名を入力してください';
+    if (!form.金額 || Number(form.金額.replace(/,/g, '')) <= 0) newErrors.金額 = '金額は1以上で入力してください';
+    if (!form.記録日) newErrors.記録日 = '記録日を選択してください';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     const dataRef = ref(database, '/products');
     push(dataRef, {
       ...form,
-      金額: Number(form.金額),
+      金額: Number(form.金額.replace(/,/g, '')),
     });
-    setForm({ 商品名: '', 金額: '', 店舗名: 'コスモス', 記録日: '' });
+    setForm({
+      商品名: '',
+      金額: '',
+      店舗名: 'コスモス',
+      記録日: new Date().toISOString().split('T')[0],
+    });
+    setErrors({});
   };
 
-  const formatPrice = (price) => price.toLocaleString();
+  const formatDisplayDate = (dateStr) => {
+    const date = new Date(dateStr);
+    const days = ['日', '月', '火', '水', '木', '金', '土'];
+    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} (${days[date.getDay()]})`;
+  };
+
+  const formatPrice = (price) => Number(price).toLocaleString();
 
   return (
     <div className="min-h-screen p-4 bg-pink-50 text-gray-800 dark:bg-gray-900 dark:text-pink-100 transition-colors duration-300">
@@ -57,29 +92,35 @@ function App() {
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={toggleDarkMode}
-          className="px-4 py-2 bg-pink-400 text-white rounded-2xl shadow-md hover:bg-pink-500"
+          className="text-2xl"
         >
-          {darkMode ? '☀️ ライトモード' : '🌙 ダークモード'}
+          {darkMode ? '☀️' : '🌙'}
         </motion.button>
       </header>
 
       <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">
-        <input
-          type="text"
-          name="商品名"
-          placeholder="商品名"
-          value={form.商品名}
-          onChange={handleChange}
-          className="w-full p-3 rounded-2xl border border-pink-300 dark:border-pink-700 bg-white dark:bg-pink-800"
-        />
-        <input
-          type="number"
-          name="金額"
-          placeholder="金額"
-          value={form.金額}
-          onChange={handleChange}
-          className="w-full p-3 rounded-2xl border border-pink-300 dark:border-pink-700 bg-white dark:bg-pink-800"
-        />
+        <div>
+          <input
+            type="text"
+            name="商品名"
+            placeholder="商品名"
+            value={form.商品名}
+            onChange={handleChange}
+            className="w-full p-3 rounded-2xl border border-pink-300 dark:border-pink-700 bg-white dark:bg-pink-800"
+          />
+          {errors.商品名 && <p className="text-red-500 text-sm mt-1">{errors.商品名}</p>}
+        </div>
+        <div>
+          <input
+            type="text"
+            name="金額"
+            placeholder="金額"
+            value={form.金額}
+            onChange={handleChange}
+            className="w-full p-3 rounded-2xl border border-pink-300 dark:border-pink-700 bg-white dark:bg-pink-800"
+          />
+          {errors.金額 && <p className="text-red-500 text-sm mt-1">{errors.金額}</p>}
+        </div>
         <select
           name="店舗名"
           value={form.店舗名}
@@ -90,13 +131,16 @@ function App() {
           <option value="明治屋">明治屋</option>
           <option value="ルミエール">ルミエール</option>
         </select>
-        <input
-          type="date"
-          name="記録日"
-          value={form.記録日}
-          onChange={handleChange}
-          className="w-full p-3 rounded-2xl border border-pink-300 dark:border-pink-700 bg-white dark:bg-pink-800"
-        />
+        <div>
+          <input
+            type="date"
+            name="記録日"
+            value={form.記録日}
+            onChange={handleChange}
+            className="w-full p-3 rounded-2xl border border-pink-300 dark:border-pink-700 bg-white dark:bg-pink-800"
+          />
+          {errors.記録日 && <p className="text-red-500 text-sm mt-1">{errors.記録日}</p>}
+        </div>
         <motion.button
           type="submit"
           whileHover={{ scale: 1.05 }}
@@ -117,7 +161,7 @@ function App() {
             <strong className="text-lg font-semibold">{item['商品名']}</strong>
             <p>💰 {formatPrice(item['金額'])}円</p>
             <p>🏪 {item['店舗名']}</p>
-            <p>📅 {item['記録日']}</p>
+            <p>📅 {formatDisplayDate(item['記録日'])}</p>
           </div>
         ))}
       </div>
