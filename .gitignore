@@ -21,3 +21,13 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.vercel
+# 環境変数ファイル（APIキーなどの秘密情報）
+.env
+
+# Node.js依存モジュール（容量でかい、Git管理不要）
+node_modules/
+
+# OSやエディタ固有のゴミファイル
+.DS_Store
+.vscode/
