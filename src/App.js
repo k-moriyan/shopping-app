@@ -27,6 +27,7 @@ function App() {
         setProducts(productsArray);
       }
     });
+
     const root = document.documentElement;
     if (darkMode) root.classList.add('dark');
     else root.classList.remove('dark');
@@ -49,27 +50,27 @@ function App() {
   const formatPrice = (price) => price.toLocaleString();
 
   return (
-    <div className="min-h-screen p-4 bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
-      <header className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">商品入力フォーム</h1>
+    <div className="min-h-screen p-4 bg-pink-50 text-gray-800 dark:bg-gray-900 dark:text-pink-100 transition-colors duration-300">
+      <header className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">🛍️ 商品入力フォーム</h1>
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={toggleDarkMode}
-          className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-700"
+          className="px-4 py-2 bg-pink-400 text-white rounded-2xl shadow-md hover:bg-pink-500"
         >
           {darkMode ? '☀️ ライトモード' : '🌙 ダークモード'}
         </motion.button>
       </header>
 
-      <form onSubmit={handleSubmit} className="space-y-2 max-w-md mx-auto">
+      <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">
         <input
           type="text"
           name="商品名"
           placeholder="商品名"
           value={form.商品名}
           onChange={handleChange}
-          className="w-full p-2 border rounded dark:bg-gray-800"
+          className="w-full p-3 rounded-2xl border border-pink-300 dark:border-pink-700 bg-white dark:bg-pink-800"
         />
         <input
           type="number"
@@ -77,13 +78,13 @@ function App() {
           placeholder="金額"
           value={form.金額}
           onChange={handleChange}
-          className="w-full p-2 border rounded dark:bg-gray-800"
+          className="w-full p-3 rounded-2xl border border-pink-300 dark:border-pink-700 bg-white dark:bg-pink-800"
         />
         <select
           name="店舗名"
           value={form.店舗名}
           onChange={handleChange}
-          className="w-full p-2 border rounded dark:bg-gray-800"
+          className="w-full p-3 rounded-2xl border border-pink-300 dark:border-pink-700 bg-white dark:bg-pink-800"
         >
           <option value="コスモス">コスモス</option>
           <option value="明治屋">明治屋</option>
@@ -94,26 +95,32 @@ function App() {
           name="記録日"
           value={form.記録日}
           onChange={handleChange}
-          className="w-full p-2 border rounded dark:bg-gray-800"
+          className="w-full p-3 rounded-2xl border border-pink-300 dark:border-pink-700 bg-white dark:bg-pink-800"
         />
         <motion.button
           type="submit"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="w-full p-3 bg-pink-400 text-white rounded-2xl shadow-md hover:bg-pink-500"
         >
-          追加
+          💖 追加
         </motion.button>
       </form>
 
-      <h2 className="text-lg font-semibold mt-6">商品リスト</h2>
-      <ul className="mt-2 space-y-1">
+      <h2 className="text-2xl font-semibold mt-8 mb-4">📋 商品リスト</h2>
+      <div className="grid gap-4">
         {products.map((item) => (
-          <li key={item.id} className="p-2 border rounded dark:border-gray-700">
-            <strong>{item['商品名']}</strong> - {formatPrice(item['金額'])}円 - {item['店舗名']} - {item['記録日']}
-          </li>
+          <div
+            key={item.id}
+            className="p-4 bg-pink-100 dark:bg-pink-800 rounded-2xl shadow-md"
+          >
+            <strong className="text-lg font-semibold">{item['商品名']}</strong>
+            <p>💰 {formatPrice(item['金額'])}円</p>
+            <p>🏪 {item['店舗名']}</p>
+            <p>📅 {item['記録日']}</p>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
