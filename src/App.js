@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { database } from './firebase';
 import { ref, push, onValue } from 'firebase/database';
+import './App.css';
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -37,7 +38,7 @@ function App() {
     const dataRef = ref(database, '/products');
     push(dataRef, {
       ...form,
-      金額: Number(form.金額), // 数値に変換
+      金額: Number(form.金額),
     });
     setForm({ 商品名: '', 金額: '', 店舗名: 'コスモス', 記録日: '' });
   };
@@ -45,13 +46,13 @@ function App() {
   const formatPrice = (price) => price.toLocaleString();
 
   return (
-    <div className={darkMode ? 'App dark-mode' : 'App'}>
+    <div className={darkMode ? 'app dark-mode' : 'app'}>
       <header className="header">
-         <h1>商品入力フォーム</h1>
-         <button onClick={toggleDarkMode} className="dark-mode-toggle">
-    {darkMode ? '☀️ ライトモード' : '🌙 ダークモード'}
-  </button>
-</header>
+        <h1>商品入力フォーム</h1>
+        <button onClick={toggleDarkMode} className="dark-mode-toggle">
+          {darkMode ? '☀️ ライトモード' : '🌙 ダークモード'}
+        </button>
+      </header>
 
       <form onSubmit={handleSubmit}>
         <input
