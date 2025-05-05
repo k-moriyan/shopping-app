@@ -45,7 +45,6 @@ function App() {
 
   const formatPrice = (price) => price.toLocaleString();
 
-  
   return (
     <div className={darkMode ? 'app dark-mode' : 'app'}>
       <header className="header">
