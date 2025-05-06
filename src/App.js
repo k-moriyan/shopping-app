@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { database } from './firebase';
 import { ref, push, onValue, remove, update } from 'firebase/database';
@@ -10,6 +11,7 @@ function App() {
   const [editTarget, setEditTarget] = useState(null);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [errors, setErrors] = useState({});
+  const [editErrors, setEditErrors] = useState({});
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -48,7 +50,7 @@ function App() {
     } else {
       setForm({ ...form, [name]: value });
     }
-    setErrors({ ...errors, [name]: '' }); // 入力中にエラー消す
+    setErrors({ ...errors, [name]: '' });
   };
 
   const handleSubmit = (e) => {
@@ -56,41 +58,20 @@ function App() {
 
     let newErrors = {};
 
-    if (!form.商品名.trim()) {
-      newErrors.商品名 = '商品名を入力してください。';
-    }
-
+    if (!form.商品名.trim()) newErrors.商品名 = '商品名を入力してください。';
     const numericPrice = Number(form.金額.replace(/,/g, ''));
-    if (form.金額.trim() === '' || isNaN(numericPrice) || numericPrice < 0) {
+    if (form.金額.trim() === '' || isNaN(numericPrice) || numericPrice < 0)
       newErrors.金額 = '金額は0以上の数字を入力してください。';
-    }
-
-    if (!form.店舗名.trim()) {
-      newErrors.店舗名 = '店舗名を選択してください。';
-    }
-
-    if (form.記録日 > today) {
-      newErrors.記録日 = '未来の日付は選択できません。';
-    }
+    if (!form.店舗名.trim()) newErrors.店舗名 = '店舗名を選択してください。';
+    if (form.記録日 > today) newErrors.記録日 = '未来の日付は選択できません。';
 
     setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
 
-    if (Object.keys(newErrors).length > 0) {
-      return;
-    }
-
-    const payload = {
-      ...form,
-      金額: numericPrice,
-    };
+    const payload = { ...form, 金額: numericPrice };
 
     push(ref(database, '/products'), payload);
-    setForm({
-      商品名: '',
-      金額: '',
-      店舗名: 'コスモス',
-      記録日: today,
-    });
+    setForm({ 商品名: '', 金額: '', 店舗名: 'コスモス', 記録日: today });
     setErrors({});
   };
 
@@ -105,6 +86,7 @@ function App() {
       ...item,
       金額: item['金額'].toLocaleString(),
     });
+    setEditErrors({});
     setEditModalOpen(true);
   };
 
@@ -117,14 +99,27 @@ function App() {
     } else {
       setEditTarget({ ...editTarget, [name]: value });
     }
+    setEditErrors({ ...editErrors, [name]: '' });
   };
 
   const handleEditSubmit = () => {
+    let newErrors = {};
+
+    if (!editTarget.商品名.trim()) newErrors.商品名 = '商品名を入力してください。';
+    const numericPrice = Number(editTarget.金額.replace(/,/g, ''));
+    if (editTarget.金額.trim() === '' || isNaN(numericPrice) || numericPrice < 0)
+      newErrors.金額 = '金額は0以上の数字を入力してください。';
+    if (!editTarget.店舗名.trim()) newErrors.店舗名 = '店舗名を選択してください。';
+    if (editTarget.記録日 > today) newErrors.記録日 = '未来の日付は選択できません。';
+
+    setEditErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
     if (window.confirm('更新しますか？')) {
       const dataRef = ref(database, `/products/${editTarget.id}`);
       update(dataRef, {
         商品名: editTarget['商品名'],
-        金額: Number(editTarget['金額'].replace(/,/g, '')),
+        金額: numericPrice,
         店舗名: editTarget['店舗名'],
         記録日: editTarget['記録日'],
       });
@@ -151,14 +146,14 @@ function App() {
   }, {});
 
   return (
-    <div className="min-h-screen font-rounded">
-      <header className="bg-lightblue-200 text-gray-800 p-4 flex justify-between items-center">
+    <div className="min-h-screen font-rounded bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-white">
+      <header className="bg-lightblue-200 text-gray-800 p-4 flex justify-between items-center dark:bg-gray-800">
         <h1 className="text-2xl font-bold">Shopping Journal</h1>
         <button
           onClick={toggleDarkMode}
-          className="rounded-md bg-white text-lightblue-600 px-3 py-1 hover:bg-lightblue-100 transition"
+          className="rounded-md px-3 py-1 bg-lightblue-300 text-gray-800 hover:bg-lightblue-400 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition"
         >
-          {darkMode ? 'ライト' : 'ダーク'}
+          {darkMode ? 'ライトモード' : 'ダークモード'}
         </button>
       </header>
 
@@ -167,19 +162,16 @@ function App() {
           <h2 className="text-xl font-semibold mb-4">最安値一覧</h2>
           <div className="grid grid-cols-2 gap-4">
             {Object.entries(lowestPrices).map(([name, { price, store }]) => (
-              <div
-                key={name}
-                className="bg-white rounded-md shadow-sm p-4"
-              >
+              <div key={name} className="rounded-md shadow-sm p-4 bg-white dark:bg-gray-800">
                 <h3 className="text-lg font-medium">{name}</h3>
-                <p className="text-sm text-gray-500">💰 {formatPrice(price)}円</p>
-                <p className="text-sm text-gray-500">🏪 {store}</p>
+                <p className="text-sm">💰 {formatPrice(price)}円</p>
+                <p className="text-sm">🏪 {store}</p>
               </div>
             ))}
           </div>
         </section>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-md shadow-sm p-6 mb-8 space-y-4">
+        <form onSubmit={handleSubmit} className="rounded-md shadow-sm p-6 mb-8 bg-white dark:bg-gray-800 space-y-4">
           <div>
             <input
               type="text"
@@ -234,24 +226,69 @@ function App() {
 
           <button
             type="submit"
-            className="w-full bg-lightblue-300 text-gray-800 p-3 rounded-md hover:bg-lightblue-400 transition"
+            className="w-full p-3 rounded-md bg-lightblue-300 text-gray-800 hover:bg-lightblue-400 dark:bg-lightblue-500 dark:text-gray-900 dark:hover:bg-lightblue-600 transition"
           >
             ➕ 追加
           </button>
         </form>
 
+        {isEditModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-md w-full max-w-md">
+              <h2 className="text-xl font-semibold mb-4">編集</h2>
+              <input
+                type="text"
+                name="商品名"
+                value={editTarget['商品名']}
+                onChange={handleEditChange}
+                className="w-full p-3 mb-2 border rounded-md"
+              />
+              {editErrors.商品名 && <p className="text-red-500 text-sm mb-2">{editErrors.商品名}</p>}
+              <input
+                type="text"
+                name="金額"
+                value={editTarget['金額']}
+                onChange={handleEditChange}
+                className="w-full p-3 mb-2 border rounded-md"
+              />
+              {editErrors.金額 && <p className="text-red-500 text-sm mb-2">{editErrors.金額}</p>}
+              <input
+                type="text"
+                name="店舗名"
+                value={editTarget['店舗名']}
+                onChange={handleEditChange}
+                className="w-full p-3 mb-2 border rounded-md"
+              />
+              {editErrors.店舗名 && <p className="text-red-500 text-sm mb-2">{editErrors.店舗名}</p>}
+              <input
+                type="date"
+                name="記録日"
+                max={today}
+                value={editTarget['記録日']}
+                onChange={handleEditChange}
+                className="w-full p-3 mb-4 border rounded-md"
+              />
+              {editErrors.記録日 && <p className="text-red-500 text-sm mb-2">{editErrors.記録日}</p>}
+              <div className="flex justify-end space-x-2">
+                <button onClick={() => setEditModalOpen(false)} className="px-4 py-2 bg-gray-400 rounded-md hover:bg-gray-500 transition">キャンセル</button>
+                <button onClick={handleEditSubmit} className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition">更新</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <section className="space-y-4">
           {products.map((item) => (
-            <div key={item.id} className="bg-white rounded-md shadow-sm p-4 flex justify-between items-center">
+            <div key={item.id} className="rounded-md shadow-sm p-4 flex justify-between items-center bg-white dark:bg-gray-800">
               <div>
-                <h3 className="text-lg font-medium text-gray-800">{item['商品名']}</h3>
-                <p className="text-sm text-gray-500">💰 {formatPrice(item['金額'])}円</p>
-                <p className="text-sm text-gray-500">📅 {formatDisplayDate(item['記録日'])}</p>
-                <p className="text-sm text-gray-500">🏪 {item['店舗名']}</p>
+                <h3 className="text-lg font-medium">{item['商品名']}</h3>
+                <p className="text-sm">💰 {formatPrice(item['金額'])}円</p>
+                <p className="text-sm">📅 {formatDisplayDate(item['記録日'])}</p>
+                <p className="text-sm">🏪 {item['店舗名']}</p>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => handleEdit(item)} className="px-3 py-1 bg-lightblue-300 text-gray-800 rounded-md hover:bg-lightblue-400 transition">編集</button>
-                <button onClick={() => handleDelete(item.id)} className="px-3 py-1 bg-red-400 text-white rounded-md hover:bg-red-500 transition">削除</button>
+                <button onClick={() => handleEdit(item)} className="px-3 py-1 rounded-md bg-lightblue-300 text-gray-800 hover:bg-lightblue-400 transition dark:bg-yellow-500 dark:text-gray-900 dark:hover:bg-yellow-600">編集</button>
+                <button onClick={() => handleDelete(item.id)} className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition">削除</button>
               </div>
             </div>
           ))}
