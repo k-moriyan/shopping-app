@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { database } from './firebase';
-import { ref, push, onValue } from 'firebase/database';
+import { ref, push, onValue, remove, update } from 'firebase/database';
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
   const toggleDarkMode = () => setDarkMode(!darkMode);
 
   const [products, setProducts] = useState([]);
+  const [editTarget, setEditTarget] = useState(null);
+  const [isEditModalOpen, setEditModalOpen] = useState(false);
+
   const [form, setForm] = useState({
     商品名: '',
     金額: '',
@@ -38,7 +41,6 @@ function App() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     if (name === '金額') {
       const numericValue = value.replace(/[^\d]/g, '');
       const formatted = numericValue ? Number(numericValue).toLocaleString() : '';
@@ -61,11 +63,13 @@ function App() {
     e.preventDefault();
     if (!validateForm()) return;
 
-    const dataRef = ref(database, '/products');
-    push(dataRef, {
+    const payload = {
       ...form,
       金額: Number(form.金額.replace(/,/g, '')),
-    });
+    };
+
+    push(ref(database, '/products'), payload);
+
     setForm({
       商品名: '',
       金額: '',
@@ -73,6 +77,44 @@ function App() {
       記録日: new Date().toISOString().split('T')[0],
     });
     setErrors({});
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm('削除しますか？')) {
+      remove(ref(database, `/products/${id}`));
+    }
+  };
+
+  const handleEdit = (item) => {
+    setEditTarget({
+      ...item,
+      金額: item['金額'].toLocaleString(),
+    });
+    setEditModalOpen(true);
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    if (name === '金額') {
+      const numericValue = value.replace(/[^\d]/g, '');
+      const formatted = numericValue ? Number(numericValue).toLocaleString() : '';
+      setEditTarget({ ...editTarget, [name]: formatted });
+    } else {
+      setEditTarget({ ...editTarget, [name]: value });
+    }
+  };
+
+  const handleEditSubmit = () => {
+    if (window.confirm('更新しますか？')) {
+      const dataRef = ref(database, `/products/${editTarget.id}`);
+      update(dataRef, {
+        商品名: editTarget['商品名'],
+        金額: Number(editTarget['金額'].replace(/,/g, '')),
+        店舗名: editTarget['店舗名'],
+        記録日: editTarget['記録日'],
+      });
+      setEditModalOpen(false);
+    }
   };
 
   const formatDisplayDate = (dateStr) => {
@@ -83,13 +125,10 @@ function App() {
 
   const formatPrice = (price) => Number(price).toLocaleString();
 
-  // 商品ごとの最安値計算
-  // 商品ごとの最安値と店舗名を計算
   const lowestPrices = products.reduce((acc, item) => {
     const productName = item['商品名'];
     const price = item['金額'];
     const store = item['店舗名'];
-
     if (!acc[productName] || price < acc[productName].price) {
       acc[productName] = { price, store };
     }
@@ -165,34 +204,78 @@ function App() {
         </motion.button>
       </form>
 
-      {/* 商品ごとの最安値表示 */}
       <h2 className="text-2xl font-semibold mt-8 mb-4">🏆 商品ごとの最安値</h2>
-        <div className="flex flex-wrap gap-4 mb-6 max-w-4xl mx-auto">
-          {Object.entries(lowestPrices).map(([name, { price, store }]) => (
-            <div
-              key={name}
-              className="flex flex-col items-center p-3 bg-yellow-100 dark:bg-yellow-800 rounded-xl shadow w-40">
-              <strong className="text-lg">{name}</strong>
-              <p className="text-sm">💰 {formatPrice(price)}円</p>
-              <p className="text-sm">🏪 {store}</p>
-            </div>
-          ))}
-        </div>
+      <div className="flex flex-wrap gap-4 mb-6 max-w-4xl mx-auto">
+        {Object.entries(lowestPrices).map(([name, { price, store }]) => (
+          <div key={name} className="flex flex-col items-center p-3 bg-yellow-100 dark:bg-yellow-800 rounded-xl shadow w-40">
+            <strong className="text-lg">{name}</strong>
+            <p className="text-sm">💰 {formatPrice(price)}円</p>
+            <p className="text-sm">🏪 {store}</p>
+          </div>
+        ))}
+      </div>
 
       <h2 className="text-2xl font-semibold mt-8 mb-4">📋 商品リスト</h2>
       <div className="grid gap-4">
         {products.map((item) => (
-          <div
-            key={item.id}
-            className="p-4 bg-pink-100 dark:bg-pink-800 rounded-2xl shadow-md"
-          >
-            <strong className="text-lg font-semibold">{item['商品名']}</strong>
-            <p>💰 {formatPrice(item['金額'])}円</p>
-            <p>🏪 {item['店舗名']}</p>
-            <p>📅 {formatDisplayDate(item['記録日'])}</p>
+          <div key={item.id} className="p-4 bg-pink-100 dark:bg-pink-800 rounded-2xl shadow-md flex justify-between items-center">
+            <div>
+              <strong className="text-lg font-semibold">{item['商品名']}</strong>
+              <p>💰 {formatPrice(item['金額'])}円</p>
+              <p>🏪 {item['店舗名']}</p>
+              <p>📅 {formatDisplayDate(item['記録日'])}</p>
+            </div>
+            <div className="flex flex-col gap-2 ml-4">
+              <button onClick={() => handleEdit(item)} className="text-blue-500 hover:scale-110">✏️</button>
+              <button onClick={() => handleDelete(item.id)} className="text-red-500 hover:scale-110">🗑️</button>
+            </div>
           </div>
         ))}
       </div>
+
+      {/* 編集モーダル */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl w-full max-w-md">
+            <h3 className="text-xl font-bold mb-4">✏️ 編集</h3>
+            <input
+              type="text"
+              name="商品名"
+              value={editTarget['商品名']}
+              onChange={handleEditChange}
+              className="w-full p-2 mb-2 border rounded"
+            />
+            <input
+              type="text"
+              name="金額"
+              value={editTarget['金額']}
+              onChange={handleEditChange}
+              className="w-full p-2 mb-2 border rounded"
+            />
+            <select
+              name="店舗名"
+              value={editTarget['店舗名']}
+              onChange={handleEditChange}
+              className="w-full p-2 mb-2 border rounded"
+            >
+              <option value="コスモス">コスモス</option>
+              <option value="明治屋">明治屋</option>
+              <option value="ルミエール">ルミエール</option>
+            </select>
+            <input
+              type="date"
+              name="記録日"
+              value={editTarget['記録日']}
+              onChange={handleEditChange}
+              className="w-full p-2 mb-2 border rounded"
+            />
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setEditModalOpen(false)} className="px-4 py-2 bg-gray-300 rounded">キャンセル</button>
+              <button onClick={handleEditSubmit} className="px-4 py-2 bg-pink-500 text-white rounded">更新</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
