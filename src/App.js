@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { database } from './firebase';
 import { ref, push, onValue, remove, update } from 'firebase/database';
 
@@ -10,12 +9,15 @@ function App() {
   const [products, setProducts] = useState([]);
   const [editTarget, setEditTarget] = useState(null);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const today = new Date().toISOString().split('T')[0];
 
   const [form, setForm] = useState({
     商品名: '',
     金額: '',
     店舗名: 'コスモス',
-    記録日: new Date().toISOString().split('T')[0],
+    記録日: today,
   });
 
   useEffect(() => {
@@ -46,21 +48,50 @@ function App() {
     } else {
       setForm({ ...form, [name]: value });
     }
+    setErrors({ ...errors, [name]: '' }); // 入力中にエラー消す
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    let newErrors = {};
+
+    if (!form.商品名.trim()) {
+      newErrors.商品名 = '商品名を入力してください。';
+    }
+
+    const numericPrice = Number(form.金額.replace(/,/g, ''));
+    if (form.金額.trim() === '' || isNaN(numericPrice) || numericPrice < 0) {
+      newErrors.金額 = '金額は0以上の数字を入力してください。';
+    }
+
+    if (!form.店舗名.trim()) {
+      newErrors.店舗名 = '店舗名を選択してください。';
+    }
+
+    if (form.記録日 > today) {
+      newErrors.記録日 = '未来の日付は選択できません。';
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      return;
+    }
+
     const payload = {
       ...form,
-      金額: Number(form.金額.replace(/,/g, '')),
+      金額: numericPrice,
     };
+
     push(ref(database, '/products'), payload);
     setForm({
       商品名: '',
       金額: '',
       店舗名: 'コスモス',
-      記録日: new Date().toISOString().split('T')[0],
+      記録日: today,
     });
+    setErrors({});
   };
 
   const handleDelete = (id) => {
@@ -132,54 +163,75 @@ function App() {
       </header>
 
       <main className="max-w-4xl mx-auto p-6">
-      <section className="mb-8">
-  <h2 className="text-xl font-semibold mb-4">最安値一覧</h2>
-  <div className="flex flex-wrap gap-4">
-    {Object.entries(lowestPrices).map(([name, { price, store }]) => (
-      <div key={name} className="w-1/2 bg-white rounded-md shadow-sm p-4">
-        <h3 className="text-lg font-medium">{name}</h3>
-        <p className="text-sm text-gray-500">💰 {formatPrice(price)}円</p>
-        <p className="text-sm text-gray-500">🏪 {store}</p>
-      </div>
-    ))}
-  </div>
-</section>
+        <section className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">最安値一覧</h2>
+          <div className="grid grid-cols-2 gap-4">
+            {Object.entries(lowestPrices).map(([name, { price, store }]) => (
+              <div
+                key={name}
+                className="bg-white rounded-md shadow-sm p-4"
+              >
+                <h3 className="text-lg font-medium">{name}</h3>
+                <p className="text-sm text-gray-500">💰 {formatPrice(price)}円</p>
+                <p className="text-sm text-gray-500">🏪 {store}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         <form onSubmit={handleSubmit} className="bg-white rounded-md shadow-sm p-6 mb-8 space-y-4">
-          <input
-            type="text"
-            name="商品名"
-            placeholder="商品名"
-            value={form.商品名}
-            onChange={handleChange}
-            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-lightblue-400"
-          />
-          <input
-            type="text"
-            name="金額"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            placeholder="金額"
-            value={form.金額}
-            onChange={handleChange}
-            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-lightblue-400"
-          />
-          <select
-            name="店舗名"
-            value={form.店舗名}
-            onChange={handleChange}
-            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-lightblue-400"
-          >
-            <option value="コスモス">コスモス</option>
-            <option value="明治屋">明治屋</option>
-            <option value="ルミエール">ルミエール</option>
-          </select>
-          <input
-            type="date"
-            name="記録日"
-            value={form.記録日}
-            onChange={handleChange}
-            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-lightblue-400"
-          />
+          <div>
+            <input
+              type="text"
+              name="商品名"
+              placeholder="商品名"
+              value={form.商品名}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-lightblue-400"
+            />
+            {errors.商品名 && <p className="text-red-500 text-sm mt-1">{errors.商品名}</p>}
+          </div>
+
+          <div>
+            <input
+              type="text"
+              name="金額"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="金額"
+              value={form.金額}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-lightblue-400"
+            />
+            {errors.金額 && <p className="text-red-500 text-sm mt-1">{errors.金額}</p>}
+          </div>
+
+          <div>
+            <select
+              name="店舗名"
+              value={form.店舗名}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-lightblue-400"
+            >
+              <option value="コスモス">コスモス</option>
+              <option value="明治屋">明治屋</option>
+              <option value="ルミエール">ルミエール</option>
+            </select>
+            {errors.店舗名 && <p className="text-red-500 text-sm mt-1">{errors.店舗名}</p>}
+          </div>
+
+          <div>
+            <input
+              type="date"
+              name="記録日"
+              max={today}
+              value={form.記録日}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-lightblue-400"
+            />
+            {errors.記録日 && <p className="text-red-500 text-sm mt-1">{errors.記録日}</p>}
+          </div>
+
           <button
             type="submit"
             className="w-full bg-lightblue-300 text-gray-800 p-3 rounded-md hover:bg-lightblue-400 transition"
