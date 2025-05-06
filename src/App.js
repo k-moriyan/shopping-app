@@ -134,9 +134,9 @@ function App() {
       <main className="max-w-4xl mx-auto p-6">
       <section className="mb-8">
         <h2 className="text-xl font-semibold mb-4">最安値一覧</h2>
-        <div className="flex space-x-4 overflow-x-auto pb-2">
+        <div className="flex flex-wrap gap-4">
           {Object.entries(lowestPrices).map(([name, { price, store }]) => (
-            <div key={name} className="min-w-[200px] bg-white rounded-md shadow-sm p-4 flex-shrink-0">
+            <div key={name} className="w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.5rem)] lg:w-[calc(25%-0.5rem)] bg-white rounded-md shadow-sm p-4">
               <h3 className="text-lg font-medium">{name}</h3>
               <p className="text-sm text-gray-500">💰 {formatPrice(price)}円</p>
               <p className="text-sm text-gray-500">🏪 {store}</p>
