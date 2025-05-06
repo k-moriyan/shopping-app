@@ -83,6 +83,19 @@ function App() {
 
   const formatPrice = (price) => Number(price).toLocaleString();
 
+  // 商品ごとの最安値計算
+  // 商品ごとの最安値と店舗名を計算
+  const lowestPrices = products.reduce((acc, item) => {
+    const productName = item['商品名'];
+    const price = item['金額'];
+    const store = item['店舗名'];
+
+    if (!acc[productName] || price < acc[productName].price) {
+      acc[productName] = { price, store };
+    }
+    return acc;
+  }, {});
+
   return (
     <div className="min-h-screen p-4 bg-pink-50 text-gray-800 dark:bg-gray-900 dark:text-pink-100 transition-colors duration-300">
       <header className="flex justify-between items-center mb-6">
@@ -151,6 +164,20 @@ function App() {
           ➕ 追加
         </motion.button>
       </form>
+
+      {/* 商品ごとの最安値表示 */}
+      <h2 className="text-2xl font-semibold mt-8 mb-4">🏆 商品ごとの最安値</h2>
+        <div className="flex flex-wrap gap-4 mb-6 max-w-4xl mx-auto">
+          {Object.entries(lowestPrices).map(([name, { price, store }]) => (
+            <div
+              key={name}
+              className="flex flex-col items-center p-3 bg-yellow-100 dark:bg-yellow-800 rounded-xl shadow w-40">
+              <strong className="text-lg">{name}</strong>
+              <p className="text-sm">💰 {formatPrice(price)}円</p>
+              <p className="text-sm">🏪 {store}</p>
+            </div>
+          ))}
+        </div>
 
       <h2 className="text-2xl font-semibold mt-8 mb-4">📋 商品リスト</h2>
       <div className="grid gap-4">
