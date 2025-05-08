@@ -3,22 +3,22 @@ import { database } from './firebase';
 import { ref, push, onValue, remove, update } from 'firebase/database';
 
 function App() {
-  const [darkMode, setDarkMode] = useState(false);
-  const toggleDarkMode = () => setDarkMode(!darkMode);
-
   const [products, setProducts] = useState([]);
+  const [stores, setStores] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState('すべて');
+  const [showTaxIncluded, setShowTaxIncluded] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [errors, setErrors] = useState({});
   const [editErrors, setEditErrors] = useState({});
+  const formatPrice = (price) => Number(price).toLocaleString();
 
   const today = new Date().toISOString().split('T')[0];
 
   const [form, setForm] = useState({
     商品名: '',
     金額: '',
-    店舗名: 'コスモス',
+    店舗名: '',
     記録日: today,
   });
 
@@ -27,19 +27,24 @@ function App() {
     onValue(dataRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        const productsArray = Object.entries(data).map(([id, value]) => ({
-          id,
-          ...value,
-        }));
+        const productsArray = Object.entries(data).map(([id, value]) => ({ id, ...value }));
         productsArray.sort((a, b) => new Date(b['記録日']) - new Date(a['記録日']));
         setProducts(productsArray);
       }
     });
 
-    const root = document.documentElement;
-    if (darkMode) root.classList.add('dark');
-    else root.classList.remove('dark');
-  }, [darkMode]);
+    const storesRef = ref(database, '/stores');
+    onValue(storesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const storesArray = Object.entries(data).map(([id, value]) => ({ id, ...value }));
+        setStores(storesArray);
+        if (storesArray.length > 0 && !form.店舗名) {
+          setForm((prev) => ({ ...prev, 店舗名: storesArray[0].店舗名 }));
+        }
+      }
+    });
+  }, []);
 
   const productNames = [...new Set(products.map((p) => p['商品名']))];
 
@@ -78,7 +83,7 @@ function App() {
     const payload = { ...form, 金額: numericPrice };
 
     push(ref(database, '/products'), payload);
-    setForm({ 商品名: '', 金額: '', 店舗名: 'コスモス', 記録日: today });
+    setForm({ 商品名: '', 金額: '', 店舗名: stores[0]?.店舗名 || '', 記録日: today });
     setErrors({});
   };
 
@@ -89,10 +94,7 @@ function App() {
   };
 
   const handleEdit = (item) => {
-    setEditTarget({
-      ...item,
-      金額: item['金額'].toLocaleString(),
-    });
+    setEditTarget({ ...item, 金額: item['金額'].toLocaleString() });
     setEditErrors({});
     setEditModalOpen(true);
   };
@@ -140,7 +142,11 @@ function App() {
     return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} (${days[date.getDay()]})`;
   };
 
-  const formatPrice = (price) => Number(price).toLocaleString();
+  const calculatePrice = (price) => {
+    if (!showTaxIncluded) return Number(price).toLocaleString();
+    const taxPrice = Math.floor(price * 1.08);
+    return Number(taxPrice).toLocaleString();
+  };
 
   const lowestPrices = products.reduce((acc, item) => {
     const productName = item['商品名'];
@@ -153,14 +159,14 @@ function App() {
   }, {});
 
   return (
-    <div className="min-h-screen font-rounded bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-white">
-      <header className="bg-lightblue-200 text-gray-800 p-4 flex justify-between items-center dark:bg-gray-800">
+    <div className="min-h-screen font-rounded bg-gray-100 text-gray-900">
+      <header className="bg-lightblue-200 text-gray-800 p-4 flex justify-between items-center">
         <h1 className="text-2xl font-bold">Shopping Journal</h1>
         <button
-          onClick={toggleDarkMode}
-          className="rounded-md px-3 py-1 bg-lightblue-300 text-gray-800 hover:bg-lightblue-400 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition"
+          onClick={() => setShowTaxIncluded(!showTaxIncluded)}
+          className="rounded-md px-3 py-1 bg-lightblue-300 text-gray-800 hover:bg-lightblue-400 transition"
         >
-          {darkMode ? 'ライトモード' : 'ダークモード'}
+          {showTaxIncluded ? '税込' : '税抜'}
         </button>
       </header>
 
@@ -171,7 +177,7 @@ function App() {
             {Object.entries(lowestPrices).map(([name, { price, store }]) => (
               <div key={name} className="rounded-md shadow-sm p-4 bg-white dark:bg-gray-800">
                 <h3 className="text-lg font-medium">{name}</h3>
-                <p className="text-sm">💰 {formatPrice(price)}円</p>
+                <p className="text-sm">💰 {calculatePrice(price)}円</p>
                 <p className="text-sm">🏪 {store}</p>
               </div>
             ))}
@@ -214,9 +220,11 @@ function App() {
                 onChange={handleChange}
                 className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-lightblue-400"
               >
-                <option value="コスモス">コスモス</option>
-                <option value="明治屋">明治屋</option>
-                <option value="ルミエール">ルミエール</option>
+                {stores.map((store) => (
+                  <option key={store.id} value={store.店舗名}>
+                    {store.店舗名}（{store.taxType}）
+                  </option>
+                ))}
               </select>
               {errors.店舗名 && <p className="text-red-500 text-sm mt-1">{errors.店舗名}</p>}
             </div>
@@ -279,14 +287,20 @@ function App() {
                   className="w-full p-3 mb-2 border rounded-md"
                 />
                 {editErrors.金額 && <p className="text-red-500 text-sm mb-2">{editErrors.金額}</p>}
-                <input
-                  type="text"
+                <select
                   name="店舗名"
                   value={editTarget['店舗名']}
                   onChange={handleEditChange}
                   className="w-full p-3 mb-2 border rounded-md"
-                />
+                >
+                  {stores.map((store) => (
+                    <option key={store.id} value={store.店舗名}>
+                      {store.店舗名}（{store.taxType}）
+                    </option>
+                  ))}
+                </select>
                 {editErrors.店舗名 && <p className="text-red-500 text-sm mb-2">{editErrors.店舗名}</p>}
+
                 <input
                   type="date"
                   name="記録日"
@@ -309,7 +323,7 @@ function App() {
               <div key={item.id} className="rounded-md shadow-sm p-4 flex justify-between items-center bg-white dark:bg-gray-800">
                 <div>
                   <h3 className="text-lg font-medium">{item['商品名']}</h3>
-                  <p className="text-sm">💰 {formatPrice(item['金額'])}円</p>
+                  <p className="text-sm">💰 {calculatePrice(item['金額'])}円</p>
                   <p className="text-sm">📅 {formatDisplayDate(item['記録日'])}</p>
                   <p className="text-sm">🏪 {item['店舗名']}</p>
                 </div>
@@ -320,7 +334,7 @@ function App() {
               </div>
             ))}
           </section>
-        </section>
+        </section>Ï
       </main>
     </div>
   );
