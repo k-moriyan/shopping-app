@@ -166,7 +166,7 @@ function App() {
           onClick={() => setShowTaxIncluded(!showTaxIncluded)}
           className="rounded-md px-3 py-1 bg-lightblue-300 text-gray-800 hover:bg-lightblue-400 transition"
         >
-          {showTaxIncluded ? '税込' : '税抜'}
+          {showTaxIncluded ? '税込で表示中' : '税抜で表示中'}
         </button>
       </header>
 
