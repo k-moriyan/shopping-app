@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { database } from './firebase';
 import { ref, push, onValue, remove, update } from 'firebase/database';
+import { get } from 'firebase/database';
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -15,6 +16,7 @@ function App() {
   const [groupCode, setGroupCode] = useState(localStorage.getItem('groupCode') || '');
   const [inputCode, setInputCode] = useState('');
   const today = new Date().toISOString().split('T')[0];
+  const [errorMsg, setErrorMsg] = useState('');
 
   const [form, setForm] = useState({
     商品名: '',
@@ -174,17 +176,30 @@ function App() {
             value={inputCode}
             onChange={(e) => setInputCode(e.target.value)}
           />
+          {errorMsg && <p className="text-red-500 text-sm">{errorMsg}</p>}
           <button
-            className="w-full p-3 bg-lightblue-300 rounded-md hover:bg-lightblue-400"
-            onClick={() => {
-              if (inputCode.trim()) {
-                localStorage.setItem('groupCode', inputCode.trim());
-                setGroupCode(inputCode.trim());
-              }
-            }}
-          >
-            確定
-          </button>
+  className="w-full p-3 bg-lightblue-300 rounded-md hover:bg-lightblue-400"
+  onClick={async () => {
+    const trimmedCode = inputCode.trim();
+    if (!trimmedCode) {
+      setErrorMsg('家族コードを入力してください');
+      return;
+    }
+
+    const codeRef = ref(database, `/groups/${trimmedCode}`);
+    const snapshot = await get(codeRef);
+    if (!snapshot.exists()) {
+      setErrorMsg('その家族コードは存在しません');
+      return;
+    }
+
+    localStorage.setItem('groupCode', trimmedCode);
+    setGroupCode(trimmedCode);
+    setErrorMsg(''); // エラー消す
+  }}
+>
+  確定
+</button>
         </div>
       </div>
     );
