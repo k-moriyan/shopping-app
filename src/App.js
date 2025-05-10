@@ -24,28 +24,31 @@ function App() {
   });
 
   useEffect(() => {
+    if (!groupCode) return;
+  
     const dataRef = ref(database, `/groups/${groupCode}/products`);
+    const storesRef = ref(database, `/groups/${groupCode}/stores`);
+  
     onValue(dataRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
         const productsArray = Object.entries(data).map(([id, value]) => ({ id, ...value }));
-        productsArray.sort((a, b) => new Date(b['記録日']) - new Date(a['記録日']));
         setProducts(productsArray);
+      } else {
+        setProducts([]);
       }
     });
-
-    const storesRef = ref(database, `/groups/${groupCode}/stores`);
+  
     onValue(storesRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
         const storesArray = Object.entries(data).map(([id, value]) => ({ id, ...value }));
         setStores(storesArray);
-        if (storesArray.length > 0 && !form.店舗名) {
-          setForm((prev) => ({ ...prev, 店舗名: storesArray[0].店舗名 }));
-        }
+      } else {
+        setStores([]);
       }
     });
-  }, []);
+  }, [groupCode]);
 
   const productNames = [...new Set(products.map((p) => p['商品名']))];
 
