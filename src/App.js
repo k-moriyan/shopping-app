@@ -35,6 +35,7 @@ function App() {
       const data = snapshot.val();
       if (data) {
         const productsArray = Object.entries(data).map(([id, value]) => ({ id, ...value }));
+        productsArray.sort((a, b) => new Date(b['記録日']) - new Date(a['記録日']));
         setProducts(productsArray);
       } else {
         setProducts([]);
@@ -46,6 +47,9 @@ function App() {
       if (data) {
         const storesArray = Object.entries(data).map(([id, value]) => ({ id, ...value }));
         setStores(storesArray);
+        if (storesArray.length > 0) {
+          setForm((prev) => ({ ...prev, 店舗名: storesArray[0].店舗名 }));
+        }
       } else {
         setStores([]);
       }
@@ -258,16 +262,15 @@ function App() {
             </div>
 
             <div>
-              <input
-                type="text"
-                name="金額"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                placeholder="金額"
-                value={form.金額}
-                onChange={handleChange}
-                className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-lightblue-400"
-              />
+            <input
+  type="text"
+  name="金額"
+  value={form.金額}
+  onChange={handleChange}
+  className="w-full p-3 border rounded-md"
+  inputMode="numeric"
+  pattern="[0-9,]*"
+/>
               {errors.金額 && <p className="text-red-500 text-sm mt-1">{errors.金額}</p>}
             </div>
 
