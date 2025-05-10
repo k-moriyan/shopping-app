@@ -12,7 +12,8 @@ function App() {
   const [errors, setErrors] = useState({});
   const [editErrors, setEditErrors] = useState({});
   const formatPrice = (price) => Number(price).toLocaleString();
-
+  const [groupCode, setGroupCode] = useState(localStorage.getItem('groupCode') || '');
+  const [inputCode, setInputCode] = useState('');
   const today = new Date().toISOString().split('T')[0];
 
   const [form, setForm] = useState({
@@ -23,7 +24,7 @@ function App() {
   });
 
   useEffect(() => {
-    const dataRef = ref(database, '/products');
+    const dataRef = ref(database, `/groups/${groupCode}/products`);
     onValue(dataRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -33,7 +34,7 @@ function App() {
       }
     });
 
-    const storesRef = ref(database, '/stores');
+    const storesRef = ref(database, `/groups/${groupCode}/stores`);
     onValue(storesRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -82,14 +83,14 @@ function App() {
 
     const payload = { ...form, 金額: numericPrice };
 
-    push(ref(database, '/products'), payload);
+    push(ref(database, `/groups/${groupCode}/products`), payload);
     setForm({ 商品名: '', 金額: '', 店舗名: stores[0]?.店舗名 || '', 記録日: today });
     setErrors({});
   };
 
   const handleDelete = (id) => {
     if (window.confirm('削除しますか？')) {
-      remove(ref(database, `/products/${id}`));
+      remove(ref(database, `/groups/${groupCode}/products/${id}`));
     }
   };
 
@@ -125,7 +126,7 @@ function App() {
     if (Object.keys(newErrors).length > 0) return;
 
     if (window.confirm('更新しますか？')) {
-      const dataRef = ref(database, `/products/${editTarget.id}`);
+      const dataRef = ref(database, `/groups/${groupCode}/products/${editTarget.id}`);
       update(dataRef, {
         商品名: editTarget['商品名'],
         金額: numericPrice,
@@ -158,17 +159,56 @@ function App() {
     return acc;
   }, {});
 
+  if (!groupCode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="p-6 bg-white rounded shadow-md space-y-4">
+          <h2 className="text-xl font-semibold">家族コードを入力してください</h2>
+          <input
+            type="text"
+            placeholder="家族コード"
+            className="w-full p-3 border rounded-md"
+            value={inputCode}
+            onChange={(e) => setInputCode(e.target.value)}
+          />
+          <button
+            className="w-full p-3 bg-lightblue-300 rounded-md hover:bg-lightblue-400"
+            onClick={() => {
+              if (inputCode.trim()) {
+                localStorage.setItem('groupCode', inputCode.trim());
+                setGroupCode(inputCode.trim());
+              }
+            }}
+          >
+            確定
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen font-rounded bg-gray-100 text-gray-900">
-      <header className="bg-lightblue-200 text-gray-800 p-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Shopping Journal</h1>
-        <button
-          onClick={() => setShowTaxIncluded(!showTaxIncluded)}
-          className="rounded-md px-3 py-1 bg-lightblue-300 text-gray-800 hover:bg-lightblue-400 transition"
-        >
-          {showTaxIncluded ? '税込で表示中' : '税抜で表示中'}
-        </button>
-      </header>
+<header className="bg-lightblue-200 text-gray-800 p-4 flex justify-between items-center">
+  <h1 className="text-2xl font-bold">Shopping Journal</h1>
+  <div className="flex gap-2">
+    <button
+      onClick={() => setShowTaxIncluded(!showTaxIncluded)}
+      className="rounded-md px-3 py-1 bg-lightblue-300 text-gray-800 hover:bg-lightblue-400 transition"
+    >
+      {showTaxIncluded ? '税込で表示中' : '税抜で表示中'}
+    </button>
+    <button
+      onClick={() => {
+        localStorage.removeItem('groupCode');
+        setGroupCode('');
+      }}
+      className="px-3 py-1 bg-yellow-400 rounded-md hover:bg-yellow-500"
+    >
+      家族コード変更
+    </button>
+  </div>
+</header>
 
       <main className="max-w-4xl mx-auto p-6">
         <section className="mb-8">
@@ -334,7 +374,7 @@ function App() {
               </div>
             ))}
           </section>
-        </section>Ï
+        </section>
       </main>
     </div>
   );
