@@ -31,10 +31,10 @@ function App() {
 
   useEffect(() => {
     if (!groupCode) return;
-  
+
     const dataRef = ref(database, `/groups/${groupCode}/products`);
     const storesRef = ref(database, `/groups/${groupCode}/stores`);
-  
+
     onValue(dataRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -45,7 +45,7 @@ function App() {
         setProducts([]);
       }
     });
-  
+
     onValue(storesRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -99,12 +99,12 @@ function App() {
 
     // 金額変換（デフォルトはそのまま）
     let finalPrice = numericPrice;
-if (selectedStore && selectedStore.taxType === '税込') {
-  finalPrice = Math.round(numericPrice / 1.08);
-}
+    if (selectedStore && selectedStore.taxType === '税込') {
+      finalPrice = Math.round(numericPrice / 1.08);
+    }
 
-// payload作成
-const payload = { ...form, 金額: finalPrice };
+    // payload作成
+    const payload = { ...form, 金額: finalPrice };
 
     // DBへ保存
     push(ref(database, `/groups/${groupCode}/products`), payload);
@@ -198,28 +198,28 @@ const payload = { ...form, 金額: finalPrice };
           />
           {errorMsg && <p className="text-red-500 text-sm">{errorMsg}</p>}
           <button
-  className="w-full p-3 bg-lightblue-300 rounded-md hover:bg-lightblue-400"
-  onClick={async () => {
-    const trimmedCode = inputCode.trim();
-    if (!trimmedCode) {
-      setErrorMsg('家族コードを入力してください');
-      return;
-    }
+            className="w-full p-3 bg-lightblue-300 rounded-md hover:bg-lightblue-400"
+            onClick={async () => {
+              const trimmedCode = inputCode.trim();
+              if (!trimmedCode) {
+                setErrorMsg('家族コードを入力してください');
+                return;
+              }
 
-    const codeRef = ref(database, `/groups/${trimmedCode}`);
-    const snapshot = await get(codeRef);
-    if (!snapshot.exists()) {
-      setErrorMsg('その家族コードは存在しません');
-      return;
-    }
+              const codeRef = ref(database, `/groups/${trimmedCode}`);
+              const snapshot = await get(codeRef);
+              if (!snapshot.exists()) {
+                setErrorMsg('その家族コードは存在しません');
+                return;
+              }
 
-    localStorage.setItem('groupCode', trimmedCode);
-    setGroupCode(trimmedCode);
-    setErrorMsg(''); // エラー消す
-  }}
->
-  確定
-</button>
+              localStorage.setItem('groupCode', trimmedCode);
+              setGroupCode(trimmedCode);
+              setErrorMsg(''); // エラー消す
+            }}
+          >
+            確定
+          </button>
         </div>
       </div>
     );
@@ -227,52 +227,52 @@ const payload = { ...form, 金額: finalPrice };
 
   return (
     <div className="min-h-screen font-rounded bg-gray-100 text-gray-900">
-<header className="bg-lightblue-200 text-gray-800 p-4 flex justify-between items-center">
-  <h1 className="text-2xl font-bold">Shopping Journal</h1>
-  
-  <div className="flex items-center gap-2">
-    {/* 税込/税抜ボタンは常に見せる */}
-    <button
-      onClick={() => setShowTaxIncluded(!showTaxIncluded)}
-      className="rounded-md px-3 py-1 bg-lightblue-300 text-gray-800 hover:bg-lightblue-400 transition"
-    >
-      {showTaxIncluded ? '税込で表示中' : '税抜で表示中'}
-    </button>
+      <header className="bg-lightblue-200 text-gray-800 p-4 flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Shopping Journal</h1>
 
-  {/* ハンバーガーメニュー */}
-  <div className="relative">
-    <button
-      onClick={() => setShowMenu(!showMenu)}
-      className="px-3 py-2 bg-lightblue-300 rounded-md hover:bg-lightblue-400"
-    >
-      ≡
-    </button>
-    {showMenu && (
-      <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-md py-2 w-48 z-50">
-        <button
-          onClick={() => {
-            localStorage.removeItem('groupCode');
-            setGroupCode('');
-            setShowMenu(false);
-          }}
-          className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-        >
-          家族コード変更
-        </button>
-        <button
-          onClick={() => {
-            navigate('/store-admin');
-            setShowMenu(false);
-          }}
-          className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-        >
-          店舗管理画面へ
-        </button>
-      </div>
-    )}
-  </div>
-  </div>
-</header>
+        <div className="flex items-center gap-2">
+          {/* 税込/税抜ボタンは常に見せる */}
+          <button
+            onClick={() => setShowTaxIncluded(!showTaxIncluded)}
+            className="rounded-md px-3 py-1 bg-lightblue-300 text-gray-800 hover:bg-lightblue-400 transition"
+          >
+            {showTaxIncluded ? '税込で表示中' : '税抜で表示中'}
+          </button>
+
+          {/* ハンバーガーメニュー */}
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="px-3 py-2 bg-lightblue-300 rounded-md hover:bg-lightblue-400"
+            >
+              ≡
+            </button>
+            {showMenu && (
+              <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-md py-2 w-48 z-50">
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('groupCode');
+                    setGroupCode('');
+                    setShowMenu(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                >
+                  家族コード変更
+                </button>
+                <button
+                  onClick={() => {
+                    navigate('/store-admin');
+                    setShowMenu(false);
+                  }}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                >
+                  店舗管理画面へ
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
 
       <main className="max-w-4xl mx-auto p-6">
         <section className="mb-8">
@@ -304,15 +304,15 @@ const payload = { ...form, 金額: finalPrice };
             </div>
 
             <div>
-            <input
-  type="text"
-  name="金額"
-  value={form.金額}
-  onChange={handleChange}
-  className="w-full p-3 border rounded-md"
-  inputMode="numeric"
-  pattern="[0-9,]*"
-/>
+              <input
+                type="text"
+                name="金額"
+                value={form.金額}
+                onChange={handleChange}
+                className="w-full p-3 border rounded-md"
+                inputMode="numeric"
+                pattern="[0-9,]*"
+              />
               {errors.金額 && <p className="text-red-500 text-sm mt-1">{errors.金額}</p>}
             </div>
 
