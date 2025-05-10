@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { database } from './firebase';
 import { ref, push, onValue, remove, update } from 'firebase/database';
 import { get } from 'firebase/database';
+import { useNavigate } from 'react-router-dom';
+
 
 function App() {
   const [products, setProducts] = useState([]);
@@ -17,6 +19,8 @@ function App() {
   const [inputCode, setInputCode] = useState('');
   const today = new Date().toISOString().split('T')[0];
   const [errorMsg, setErrorMsg] = useState('');
+  const [showMenu, setShowMenu] = useState(false);
+  const navigate = useNavigate();
 
   const [form, setForm] = useState({
     商品名: '',
@@ -225,22 +229,48 @@ const payload = { ...form, 金額: finalPrice };
     <div className="min-h-screen font-rounded bg-gray-100 text-gray-900">
 <header className="bg-lightblue-200 text-gray-800 p-4 flex justify-between items-center">
   <h1 className="text-2xl font-bold">Shopping Journal</h1>
-  <div className="flex gap-2">
+  
+  <div className="flex items-center gap-2">
+    {/* 税込/税抜ボタンは常に見せる */}
     <button
       onClick={() => setShowTaxIncluded(!showTaxIncluded)}
       className="rounded-md px-3 py-1 bg-lightblue-300 text-gray-800 hover:bg-lightblue-400 transition"
     >
       {showTaxIncluded ? '税込で表示中' : '税抜で表示中'}
     </button>
+
+  {/* ハンバーガーメニュー */}
+  <div className="relative">
     <button
-      onClick={() => {
-        localStorage.removeItem('groupCode');
-        setGroupCode('');
-      }}
-      className="px-3 py-1 bg-yellow-400 rounded-md hover:bg-yellow-500"
+      onClick={() => setShowMenu(!showMenu)}
+      className="px-3 py-2 bg-lightblue-300 rounded-md hover:bg-lightblue-400"
     >
-      家族コード変更
+      ≡
     </button>
+    {showMenu && (
+      <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-md py-2 w-48 z-50">
+        <button
+          onClick={() => {
+            localStorage.removeItem('groupCode');
+            setGroupCode('');
+            setShowMenu(false);
+          }}
+          className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+        >
+          家族コード変更
+        </button>
+        <button
+          onClick={() => {
+            navigate('/store-admin');
+            setShowMenu(false);
+          }}
+          className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+        >
+          店舗管理画面へ
+        </button>
+      </div>
+    )}
+  </div>
   </div>
 </header>
 
