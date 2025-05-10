@@ -90,9 +90,21 @@ function App() {
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
-    const payload = { ...form, 金額: numericPrice };
+    // 店舗情報を取得
+    const selectedStore = stores.find((s) => s.店舗名 === form.店舗名);
 
+    // 金額変換（デフォルトはそのまま）
+    let finalPrice = numericPrice;
+if (selectedStore && selectedStore.taxType === '税込') {
+  finalPrice = Math.round(numericPrice / 1.08);
+}
+
+// payload作成
+const payload = { ...form, 金額: finalPrice };
+
+    // DBへ保存
     push(ref(database, `/groups/${groupCode}/products`), payload);
+    // フォームリセット
     setForm({ 商品名: '', 金額: '', 店舗名: stores[0]?.店舗名 || '', 記録日: today });
     setErrors({});
   };
