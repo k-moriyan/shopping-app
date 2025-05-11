@@ -347,13 +347,22 @@ function App() {
       </header>
 
       <main className="max-w-4xl mx-auto p-6">
-        {nearestStore && (
-          <div className="mb-4 text-sm text-blue-600">
-            📍 最寄り店舗：<span className="font-semibold">{nearestStore.店舗名}</span>
-            <br />
-            🛣️ 距離：約{Math.round(nearestStore.distance)}m
-          </div>
-        )}
+        <div className="mb-4 text-sm text-blue-600">
+          {nearestStore ? (
+            <>
+              📍 最寄り店舗：<span className="font-semibold">{nearestStore.店舗名}</span><br />
+              🛣️ 距離：約{Math.round(nearestStore.distance)}m<br />
+            </>
+          ) : (
+            <span className="text-gray-500">🔍 最寄り店舗が見つかりませんでした</span>
+          )}
+
+          {userLocation && (
+            <div className="mt-1 text-xs text-gray-500">
+              現在地：lat {userLocation.lat.toFixed(6)}, lng {userLocation.lng.toFixed(6)}
+            </div>
+          )}
+        </div>
         <section className="mb-8">
           <h2 className="text-xl font-semibold mb-4">最安値一覧</h2>
           <div className="grid grid-cols-2 gap-4">
