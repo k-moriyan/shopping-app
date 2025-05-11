@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { database } from './firebase';
 import { ref, push, onValue, remove, update } from 'firebase/database';
 import { get } from 'firebase/database';
@@ -49,7 +49,7 @@ function App() {
     });
 
     // 現在地取得
-    
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
@@ -59,6 +59,8 @@ function App() {
         console.warn('位置情報取得失敗:', err);
       }
     );
+
+    /*
 
     // 距離を計算する関数（Haversine公式）
     const calculateDistance = (lat1, lng1, lat2, lng2) => {
@@ -77,6 +79,7 @@ function App() {
     };
 
     // 最寄り店舗を計算
+    
     const nearestStore = stores
       .filter((s) => s.lat && s.lng && s.status !== '無効')
       .map((store) => ({
@@ -86,6 +89,7 @@ function App() {
           : Infinity,
       }))
       .sort((a, b) => a.distance - b.distance)[0];
+      */
 
     onValue(storesRef, (snapshot) => {
       const data = snapshot.val();
@@ -100,6 +104,33 @@ function App() {
       }
     });
   }, [groupCode]);
+
+  // useEffect外に出す（stores & userLocation に依存するようにする）
+  const nearestStore = useMemo(() => {
+    if (!userLocation || stores.length === 0) return null;
+
+    const calculateDistance = (lat1, lng1, lat2, lng2) => {
+      const R = 6371e3;
+      const toRad = (x) => (x * Math.PI) / 180;
+      const φ1 = toRad(lat1);
+      const φ2 = toRad(lat2);
+      const Δφ = toRad(lat2 - lat1);
+      const Δλ = toRad(lng2 - lng1);
+
+      const a = Math.sin(Δφ / 2) ** 2 +
+        Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    };
+
+    return stores
+      .filter((s) => s.lat && s.lng && s.status !== '無効')
+      .map((store) => ({
+        ...store,
+        distance: calculateDistance(userLocation.lat, userLocation.lng, store.lat, store.lng),
+      }))
+      .sort((a, b) => a.distance - b.distance)[0];
+  }, [stores, userLocation]);
 
   const productNames = [...new Set(products.map((p) => p['商品名']))];
 
@@ -316,6 +347,13 @@ function App() {
       </header>
 
       <main className="max-w-4xl mx-auto p-6">
+        {nearestStore && (
+          <div className="mb-4 text-sm text-blue-600">
+            📍 最寄り店舗：<span className="font-semibold">{nearestStore.店舗名}</span>
+            <br />
+            🛣️ 距離：約{Math.round(nearestStore.distance)}m
+          </div>
+        )}
         <section className="mb-8">
           <h2 className="text-xl font-semibold mb-4">最安値一覧</h2>
           <div className="grid grid-cols-2 gap-4">
