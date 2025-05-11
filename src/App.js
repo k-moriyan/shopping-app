@@ -20,7 +20,9 @@ function App() {
   const today = new Date().toISOString().split('T')[0];
   const [errorMsg, setErrorMsg] = useState('');
   const [showMenu, setShowMenu] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
   const navigate = useNavigate();
+
 
   const [form, setForm] = useState({
     商品名: '',
@@ -45,6 +47,45 @@ function App() {
         setProducts([]);
       }
     });
+
+    // 現在地取得
+    
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        setUserLocation({ lat: latitude, lng: longitude });
+      },
+      (err) => {
+        console.warn('位置情報取得失敗:', err);
+      }
+    );
+
+    // 距離を計算する関数（Haversine公式）
+    const calculateDistance = (lat1, lng1, lat2, lng2) => {
+      const R = 6371e3; // 地球の半径（m）
+      const toRad = (x) => (x * Math.PI) / 180;
+      const φ1 = toRad(lat1);
+      const φ2 = toRad(lat2);
+      const Δφ = toRad(lat2 - lat1);
+      const Δλ = toRad(lng2 - lng1);
+
+      const a = Math.sin(Δφ / 2) ** 2 +
+        Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+      return R * c; // 距離（m）
+    };
+
+    // 最寄り店舗を計算
+    const nearestStore = stores
+      .filter((s) => s.lat && s.lng && s.status !== '無効')
+      .map((store) => ({
+        ...store,
+        distance: userLocation
+          ? calculateDistance(userLocation.lat, userLocation.lng, store.lat, store.lng)
+          : Infinity,
+      }))
+      .sort((a, b) => a.distance - b.distance)[0];
 
     onValue(storesRef, (snapshot) => {
       const data = snapshot.val();
@@ -391,20 +432,20 @@ function App() {
                 />
                 {editErrors.金額 && <p className="text-red-500 text-sm mb-2">{editErrors.金額}</p>}
                 <label className="block text-sm font-medium mb-1">店舗名</label>
-<select
-  name="店舗名"
-  value={editTarget['店舗名']}
-  onChange={(e) =>
-    setEditTarget((prev) => ({ ...prev, ['店舗名']: e.target.value }))
-  }
-  className="w-full p-3 border rounded-md mb-3"
->
-  {stores.map((store) => (
-    <option key={store.id} value={store.店舗名}>
-      {store.店舗名}（{store.taxType}）
-    </option>
-  ))}
-</select>
+                <select
+                  name="店舗名"
+                  value={editTarget['店舗名']}
+                  onChange={(e) =>
+                    setEditTarget((prev) => ({ ...prev, ['店舗名']: e.target.value }))
+                  }
+                  className="w-full p-3 border rounded-md mb-3"
+                >
+                  {stores.map((store) => (
+                    <option key={store.id} value={store.店舗名}>
+                      {store.店舗名}（{store.taxType}）
+                    </option>
+                  ))}
+                </select>
                 {editErrors.店舗名 && <p className="text-red-500 text-sm mb-2">{editErrors.店舗名}</p>}
 
                 <input

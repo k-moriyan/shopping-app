@@ -38,14 +38,43 @@ function StoreAdmin() {
         setForm((prev) => ({ ...prev, [name]: value }));
     };
 
+    // Geocoding処理（Google Maps API）
+    const geocode = async (address) => {
+        const res = await fetch(
+            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${process.env.REACT_APP_GOOGLE_API_KEY}`
+        );
+        const data = await res.json();
+        if (data.status === 'OK') {
+            const { lat, lng } = data.results[0].geometry.location;
+            return { lat, lng };
+        }
+        return null;
+    };
+
     // 新規登録
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+
+        let lat = null;
+        let lng = null;
+
+        // 住所があればGeocodeで緯度経度取得
+        if (form.住所.trim()) {
+            const location = await geocode(form.住所);
+            if (location) {
+                lat = location.lat;
+                lng = location.lng;
+            }
+        }
+
         const payload = {
             ...form,
+            lat,
+            lng,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
         };
+
         push(ref(database, `/groups/${groupCode}/stores`), payload);
         setForm({ 店舗名: '', taxType: '税込', 住所: '', 備考: '', status: '有効' });
     };
@@ -58,18 +87,33 @@ function StoreAdmin() {
     };
 
     // 編集保存
-    const handleEditSubmit = () => {
+    const handleEditSubmit = async () => {
+        let lat = editTarget.lat || null;
+        let lng = editTarget.lng || null;
+      
+        // 住所が変わっていたら geocode しなおす
+        if (editTarget.住所?.trim()) {
+          const location = await geocode(editTarget.住所);
+          if (location) {
+            lat = location.lat;
+            lng = location.lng;
+          }
+        }
+      
         const payload = {
-            店舗名: editTarget.店舗名,
-            taxType: editTarget.taxType,
-            住所: editTarget.住所,
-            備考: editTarget.備考,
-            status: editTarget.status,
-            updatedAt: new Date().toISOString(),
+          店舗名: editTarget.店舗名,
+          taxType: editTarget.taxType,
+          住所: editTarget.住所,
+          備考: editTarget.備考,
+          status: editTarget.status,
+          lat,
+          lng,
+          updatedAt: new Date().toISOString(),
         };
+      
         update(ref(database, `/groups/${groupCode}/stores/${editTarget.id}`), payload);
         setEditTarget(null);
-    };
+      };
 
     return (
         <div className="p-6">
