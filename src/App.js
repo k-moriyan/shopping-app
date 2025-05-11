@@ -390,18 +390,21 @@ function App() {
                   className="w-full p-3 mb-2 border rounded-md"
                 />
                 {editErrors.金額 && <p className="text-red-500 text-sm mb-2">{editErrors.金額}</p>}
-                <select
-                  name="店舗名"
-                  value={editTarget['店舗名']}
-                  onChange={handleEditChange}
-                  className="w-full p-3 mb-2 border rounded-md"
-                >
-                  {stores.map((store) => (
-                    <option key={store.id} value={store.店舗名}>
-                      {store.店舗名}（{store.taxType}）
-                    </option>
-                  ))}
-                </select>
+                <label className="block text-sm font-medium mb-1">店舗名</label>
+<select
+  name="店舗名"
+  value={editTarget['店舗名']}
+  onChange={(e) =>
+    setEditTarget((prev) => ({ ...prev, ['店舗名']: e.target.value }))
+  }
+  className="w-full p-3 border rounded-md mb-3"
+>
+  {stores.map((store) => (
+    <option key={store.id} value={store.店舗名}>
+      {store.店舗名}（{store.taxType}）
+    </option>
+  ))}
+</select>
                 {editErrors.店舗名 && <p className="text-red-500 text-sm mb-2">{editErrors.店舗名}</p>}
 
                 <input
