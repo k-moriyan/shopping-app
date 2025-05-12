@@ -14,7 +14,7 @@ function App() {
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [errors, setErrors] = useState({});
   const [editErrors, setEditErrors] = useState({});
-  const formatPrice = (price) => Number(price).toLocaleString();
+//  const formatPrice = (price) => Number(price).toLocaleString();
   const [groupCode, setGroupCode] = useState(localStorage.getItem('groupCode') || '');
   const [inputCode, setInputCode] = useState('');
   const today = new Date().toISOString().split('T')[0];
@@ -348,19 +348,19 @@ function App() {
 
       <main className="max-w-4xl mx-auto p-6">
         <div className="mb-4 text-sm text-blue-600">
-          {nearestStore ? (
-            <>
-              📍 最寄り店舗：<span className="font-semibold">{nearestStore.店舗名}</span><br />
-              🛣️ 距離：約{Math.round(nearestStore.distance)}m<br />
-            </>
-          ) : (
-            <span className="text-gray-500">🔍 最寄り店舗が見つかりませんでした</span>
+          {!userLocation && (
+            <div className="text-gray-500">📡 位置情報取得中...</div>
           )}
 
-          {userLocation && (
-            <div className="mt-1 text-xs text-gray-500">
-              現在地：lat {userLocation.lat.toFixed(6)}, lng {userLocation.lng.toFixed(6)}
-            </div>
+          {userLocation && !nearestStore && (
+            <div className="text-gray-500">🔍 最寄り店舗を計算中...</div>
+          )}
+
+          {nearestStore && (
+            <>
+              📍 最寄り店舗：<span className="font-semibold">{nearestStore.店舗名}</span><br />
+              🛣️ 距離：約{Math.round(nearestStore.distance)}m
+            </>
           )}
         </div>
         <section className="mb-8">
