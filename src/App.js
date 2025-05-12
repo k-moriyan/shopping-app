@@ -3,6 +3,7 @@ import { database } from './firebase';
 import { ref, push, onValue, remove, update } from 'firebase/database';
 import { get } from 'firebase/database';
 import { useNavigate } from 'react-router-dom';
+import packageJson from '../package.json';
 
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
   const [showMenu, setShowMenu] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const navigate = useNavigate();
+//  const version = process.env.REACT_APP_VERSION;
 
 
   const [form, setForm] = useState({
@@ -567,6 +569,9 @@ function App() {
           </section>
         </section>
       </main>
+      <footer className="border-t text-xs text-gray-400 py-2 text-center mt-10">
+        © 2025 Shopping Journal v{packageJson.version}
+      </footer>
     </div>
   );
 }
