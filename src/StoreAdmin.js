@@ -210,7 +210,7 @@ function StoreAdmin() {
                 {stores.map((store) => (
                     <li
                         key={store.id}
-                        className="p-4 bg-white shadow-md rounded-md flex justify-between items-center"
+                        className="p-4 bg-white shadow-md rounded-md flex justify-between items-start gap-4"
                     >
                         <div>
                             <p className="font-bold">{store.店舗名}</p>
@@ -219,16 +219,16 @@ function StoreAdmin() {
                             <p className="text-sm">備考: {store.備考}</p>
                             <p className="text-sm">ステータス: {store.status}</p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col items-end gap-2 min-w-[80px]">
                             <button
                                 onClick={() => setEditTarget(store)}
-                                className="px-3 py-1 bg-yellow-300 rounded-md hover:bg-yellow-400"
+                                className="px-3 py-1 bg-yellow-300 rounded-md hover:bg-yellow-400 w-full"
                             >
                                 編集
                             </button>
                             <button
                                 onClick={() => handleDelete(store.id)}
-                                className="px-3 py-1 bg-red-300 rounded-md hover:bg-red-400"
+                                className="px-3 py-1 bg-red-300 rounded-md hover:bg-red-400 w-full"
                             >
                                 削除
                             </button>
