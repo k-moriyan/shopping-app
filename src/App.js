@@ -397,9 +397,13 @@ function App() {
                   <h3 className="text-lg font-medium">{name}</h3>
                   <p className="text-sm">
                     💰 {calculatePrice(info.price)}円
-                    {isOld && <span className="text-red-500 ml-2">⚠️ 古いデータ</span>}
                   </p>
                   <p className="text-sm">🏪 {info.store}</p>
+                  {isOld && (
+                    <p className="text-xs text-red-600 font-semibold mt-1 flex items-center gap-1">
+                      ⚠️ <span>3ヶ月以上前の価格</span>
+                    </p>
+                  )}
                 </div>
               );
             })}
