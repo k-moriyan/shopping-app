@@ -121,7 +121,7 @@ function StoreAdmin() {
     return (
         <div className="min-h-screen font-rounded bg-gray-100 text-gray-900">
             <header className="bg-lightblue-200 text-gray-800 p-4 flex justify-between items-center">
-                <h1 className="text-2xl font-bold">Shopping Journal - 店舗管理</h1>
+                <h1 className="text-2xl font-bold">店舗管理</h1>
 
                 <div className="flex items-center gap-2">
                     <button
