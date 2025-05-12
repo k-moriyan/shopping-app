@@ -14,7 +14,7 @@ function App() {
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [errors, setErrors] = useState({});
   const [editErrors, setEditErrors] = useState({});
-//  const formatPrice = (price) => Number(price).toLocaleString();
+  //  const formatPrice = (price) => Number(price).toLocaleString();
   const [groupCode, setGroupCode] = useState(localStorage.getItem('groupCode') || '');
   const [inputCode, setInputCode] = useState('');
   const today = new Date().toISOString().split('T')[0];
@@ -246,13 +246,35 @@ function App() {
     return Number(taxPrice).toLocaleString();
   };
 
+  //3ヶ月前の日付取得
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+  //最安値取得
   const lowestPrices = products.reduce((acc, item) => {
     const productName = item['商品名'];
     const price = item['金額'];
     const store = item['店舗名'];
-    if (!acc[productName] || price < acc[productName].price) {
-      acc[productName] = { price, store };
+    const date = new Date(item['記録日']);
+
+    // 全期間最安値
+    if (!acc[productName] || price < acc[productName].allTimeLowest.price) {
+      acc[productName] = {
+        ...acc[productName],
+        allTimeLowest: { price, store, date }
+      };
     }
+
+    // 3ヶ月以内最安値
+    if (date >= threeMonthsAgo) {
+      if (!acc[productName]?.recentLowest || price < acc[productName].recentLowest.price) {
+        acc[productName] = {
+          ...acc[productName],
+          recentLowest: { price, store, date }
+        };
+      }
+    }
+
     return acc;
   }, {});
 
@@ -366,13 +388,21 @@ function App() {
         <section className="mb-8">
           <h2 className="text-xl font-semibold mb-4">最安値一覧</h2>
           <div className="grid grid-cols-2 gap-4">
-            {Object.entries(lowestPrices).map(([name, { price, store }]) => (
-              <div key={name} className="rounded-md shadow-sm p-4 bg-white dark:bg-gray-800">
-                <h3 className="text-lg font-medium">{name}</h3>
-                <p className="text-sm">💰 {calculatePrice(price)}円</p>
-                <p className="text-sm">🏪 {store}</p>
-              </div>
-            ))}
+            {Object.entries(lowestPrices).map(([name, data]) => {
+              const info = data.recentLowest || data.allTimeLowest;
+              const isOld = !data.recentLowest; // 直近3ヶ月にデータが無ければ注意
+
+              return (
+                <div key={name} className="rounded-md shadow-sm p-4 bg-white dark:bg-gray-800">
+                  <h3 className="text-lg font-medium">{name}</h3>
+                  <p className="text-sm">
+                    💰 {calculatePrice(info.price)}円
+                    {isOld && <span className="text-red-500 ml-2">⚠️ 古いデータ</span>}
+                  </p>
+                  <p className="text-sm">🏪 {info.store}</p>
+                </div>
+              );
+            })}
           </div>
         </section>
 
