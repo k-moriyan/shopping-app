@@ -400,6 +400,7 @@ function App() {
                 className="w-full p-3 border rounded-md"
                 inputMode="numeric"
                 pattern="[0-9,]*"
+                placeholder="金額（円）"
               />
               {errors.金額 && <p className="text-red-500 text-sm mt-1">{errors.金額}</p>}
             </div>
@@ -468,6 +469,7 @@ function App() {
                   value={editTarget['商品名']}
                   onChange={handleEditChange}
                   className="w-full p-3 mb-2 border rounded-md"
+                  placeholder="商品名"
                 />
                 {editErrors.商品名 && <p className="text-red-500 text-sm mb-2">{editErrors.商品名}</p>}
                 <input
@@ -476,6 +478,7 @@ function App() {
                   value={editTarget['金額']}
                   onChange={handleEditChange}
                   className="w-full p-3 mb-2 border rounded-md"
+                  placeholder="金額（円）"
                 />
                 {editErrors.金額 && <p className="text-red-500 text-sm mb-2">{editErrors.金額}</p>}
                 <label className="block text-sm font-medium mb-1">店舗名</label>
