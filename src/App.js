@@ -9,7 +9,7 @@ function App() {
   const [products, setProducts] = useState([]);
   const [stores, setStores] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState('すべて');
-  const [showTaxIncluded, setShowTaxIncluded] = useState(false);
+  const [showTaxIncluded, setShowTaxIncluded] = useState(true);
   const [editTarget, setEditTarget] = useState(null);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [errors, setErrors] = useState({});
@@ -486,7 +486,7 @@ function App() {
                   name="店舗名"
                   value={editTarget['店舗名']}
                   onChange={(e) =>
-                    setEditTarget((prev) => ({ ...prev, ['店舗名']: e.target.value }))
+                    setEditTarget((prev) => ({ ...prev, 店舗名: e.target.value }))
                   }
                   className="w-full p-3 border rounded-md mb-3"
                 >
