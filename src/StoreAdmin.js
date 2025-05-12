@@ -119,32 +119,46 @@ function StoreAdmin() {
     };
 
     return (
-        <div className="p-6">
-            <header className="bg-lightblue-200 text-gray-800 p-4 flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold">店舗管理画面</h1>
-                <div className="relative">
+        <div className="min-h-screen font-rounded bg-gray-100 text-gray-900">
+            <header className="bg-lightblue-200 text-gray-800 p-4 flex justify-between items-center">
+                <h1 className="text-2xl font-bold">Shopping Journal - 店舗管理</h1>
+
+                <div className="flex items-center gap-2">
                     <button
-                        onClick={() => setShowMenu(!showMenu)}
-                        className="px-3 py-2 bg-lightblue-300 rounded-md hover:bg-lightblue-400"
+                        onClick={() => {
+                            localStorage.removeItem('groupCode');
+                            navigate('/');
+                        }}
+                        className="rounded-md px-3 py-1 bg-lightblue-300 text-gray-800 hover:bg-lightblue-400 transition"
                     >
-                        ≡
+                        家族コード変更
                     </button>
-                    {showMenu && (
-                        <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-md py-2 w-48 z-50">
-                            <button
-                                onClick={() => {
-                                    navigate('/');
-                                    setShowMenu(false);
-                                }}
-                                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                            >
-                                トップページに戻る
-                            </button>
-                        </div>
-                    )}
+
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowMenu(!showMenu)}
+                            className="px-3 py-2 bg-lightblue-300 rounded-md hover:bg-lightblue-400"
+                        >
+                            ≡
+                        </button>
+                        {showMenu && (
+                            <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-md py-2 w-48 z-50">
+                                <button
+                                    onClick={() => {
+                                        navigate('/');
+                                        setShowMenu(false);
+                                    }}
+                                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                                >
+                                    トップページに戻る
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </header>
 
+            <main className="max-w-4xl mx-auto p-6">
             {/* 新規追加フォーム */}
             <form onSubmit={handleSubmit} className="mb-6 space-y-4">
                 <h2 className="text-xl font-semibold mb-2">新規店舗追加</h2>
@@ -303,6 +317,7 @@ function StoreAdmin() {
                     </div>
                 </div>
             )}
+            </main>
         </div>
     );
 }
